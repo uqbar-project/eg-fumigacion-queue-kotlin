@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: eg-fumigacion-queue-kotlin
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest

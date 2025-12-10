@@ -1,0 +1,27 @@
+services:
+  # Servicio de RabbitMQ: el broker de mensajería
+  rabbitmq:
+    image: rabbitmq:3-management # Usamos la imagen con el plugin de Management
+    container_name: rabbitmq-broker-fumigacion
+
+    ports:
+      # Puerto estándar de AMQP (para que se conecten Spring Boot y Node.js)
+      - "5672:5672"
+      # Puerto de la interfaz de administración web (para ver colas y mensajes)
+      - "15672:15672"
+
+    environment:
+      # Definimos credenciales simples por defecto para desarrollo
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      # Define el host virtual por defecto que usaremos
+      RABBITMQ_DEFAULT_VHOST: /
+
+    # Policy: reinicia automáticamente si el contenedor se detiene por un error
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
