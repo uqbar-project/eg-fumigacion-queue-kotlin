@@ -1,4 +1,12 @@
 
+# Fumigación - Ejemplo con Message Queue
+
+Trabajamos en el área de sistemas de una empresa que se dedica a la fumigación ecológica de parcelas, para lo cual tenemos aviones que salen a hacer vuelos de fumigación. Nuestro input es que desde que despega hasta que aterriza el avión nos va enviando su geolocalización. Luego nosotros le cobramos un monto calculando en base al tiempo que estuvo sobrevolando el avión por cada una de las parcelas de nuestros clientes.
+
+Necesitamos entonces
+
+- servicios con una alta capacidad, que necesitan no solo durabilidad sino la posibilidad de ser tolerante a fallas (si nuestro servidor del backend esté caído debe procesarlo en otro momento pero de ninguna manera podemos perder el registro sobre los vuelos de los aviones para facturar)
+- servicios que necesitan ser igualmente durables, pero que tienen una baja frecuencia de uso, como la que toma los acumulados para finalmente emitir la factura a cada cliente
 
 ## Iniciando la queue
 
@@ -6,44 +14,31 @@
 docker compose up -d
 ```
 
-## 
-## Cómo ver los mensajes de la queue
+## Ingestor de datos
 
-Paso 1: Acceder a la Interfaz de Administración
-Como usamos la imagen rabbitmq:3-management en el docker-compose.yml, la interfaz ya está corriendo.
+Es el proceso que simula el despegue de un avión por lo que va a estar emitiendo coordenadas que simulan el vuelo sobre diferentes parcelas.
 
-Abre tu navegador web.
+Para dispararlo posicionate en la carpeta [simulator](./simulator) y ejecutá
 
-Navega a la siguiente dirección: http://localhost:15672
+```bash
+npm install
+npm run dev
+```
 
-Ingresa las credenciales por defecto:
+En la consola vas a ver la información al azar que se produce y se envía a la cola que la almacena:
 
-Username: guest
+```bash
+✈️ SIMULADOR INICIADO - Vuelo: VUELO-1765412926306 (ID: 42)
+Enviando posiciones cada 500ms a la cola: q.posicion.raw
+ [9:28:46 PM] Posición enviada: (-35.002261, -60.001388)
+ [9:28:47 PM] Posición enviada: (-34.998837, -60.001584)
+ [9:28:47 PM] Posición enviada: (-35.002374, -60.000016)
+ [9:28:48 PM] Posición enviada: (-34.999176, -59.998629)
+ [9:28:48 PM] Posición enviada: (-35.000123, -59.997878)
+ [9:28:49 PM] Posición enviada: (-35.001779, -60.000948)
+ [9:28:49 PM] Posición enviada: (-35.000935, -59.999905)
+ [9:28:50 PM] Posición enviada: (-35.00182, -60.000513)
+ [9:28:50 PM] Posición enviada: (-34.997672, -59.998715)
+```
 
-Password: guest
-
-Paso 2: Localizar la Cola de Posiciones Crudas
-Una vez dentro del dashboard de RabbitMQ:
-
-Haz clic en la pestaña "Queues" (Colas).
-
-Busca tu cola de posiciones: q.posicion.raw.
-
-Si el simulador de Node.js está corriendo y tu aplicación Kotlin (el consumidor) no está corriendo, verás que el contador de mensajes en la columna "Ready" (Listos) estará aumentando rápidamente. Esto significa que los mensajes están esperando a ser procesados.
-
-Si ambos (productor y consumidor) están corriendo, el contador de mensajes debería mantenerse cerca de cero, ya que Spring Boot consume los mensajes tan rápido como Node.js los produce.
-
-Paso 3: Inspeccionar los Mensajes (Get Messages)
-Para ver el contenido JSON exacto que está enviando tu simulador, haz lo siguiente:
-
-Haz clic en el nombre de la cola: q.posicion.raw.
-
-En la página de detalles de la cola, busca el panel llamado "Get messages" (Obtener mensajes).
-
-En el campo "Messages", pon un número pequeño (ej. 1 o 5) para extraer esa cantidad de mensajes.
-
-Asegúrate de que la opción "Requeue" (Volver a encolar) esté seleccionada a "Yes" (Sí). Esto es crucial: si pides mensajes de la cola y no los vuelves a encolar, el consumidor de Kotlin no los verá.
-
-Haz clic en el botón "Get Messages".
-
-Verás el mensaje con el payload JSON exacto, incluyendo los campos vueloId, latitud, longitud, y timestamp. Esto es perfecto para verificar que el formato de Node.js coincide con lo que espera tu GeoprocesadorService de Kotlin.
+Una vez finalizado el proceso podés ver la información generada en la cola siguiendo [estos pasos](./docs/como-ver-info-queue.md)
