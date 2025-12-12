@@ -53,6 +53,35 @@ services:
       timeout: 30s
       retries: 3
 
+  # Redis Cache Service
+  redis:
+    image: redis:alpine
+    container_name: redis-cache-fumigacion
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --requirepass redisquero
+
+  # Redis Commander - Web UI for Redis
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander-fumigacion
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:redisquero
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+
 volumes:
   facturacion-db-data: {}
   pgadmin-data: {}
+  redis-data: {}
