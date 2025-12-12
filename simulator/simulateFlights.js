@@ -23,9 +23,9 @@ function getCenter(rectangle) {
 }
 
 const CLIENTES = [
-    { id: 1, nombre: "Cliente Norte", parcela: rectangle(-35.0005, -60.0005, -34.9995, -59.9995) },
-    { id: 2, nombre: "Cliente Centro", parcela: rectangle(-35.002, -60.002, -35.001, -60.001) },
-    { id: 3, nombre: "Cliente Sur", parcela: rectangle(-34.998, -60.003, -34.997, -60.002) }
+    { id: 1, parcela: rectangle(-35.0005, -60.0005, -34.9995, -59.9995) },
+    { id: 2, parcela: rectangle(-35.002, -60.002, -35.001, -60.001) },
+    { id: 3, parcela: rectangle(-34.998, -60.003, -34.997, -60.002) }
 ]
 
 // --- Ruta: centro de cada parcela ---
@@ -84,7 +84,7 @@ async function simularVuelo() {
         })
 
         console.log(
-            `[${new Date().toLocaleTimeString()}] Posición enviada → (${mensaje.latitud}, ${mensaje.longitud}) → hacia Cliente ${currentIndex+1}`
+            `[${new Date().toLocaleTimeString()}] Posición enviada → (${mensaje.latitud}, ${mensaje.longitud}) → Cliente ${currentIndex}`
         )
     }, INTERVALO_MS)
 }
