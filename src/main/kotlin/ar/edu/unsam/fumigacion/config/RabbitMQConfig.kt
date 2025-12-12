@@ -1,45 +1,47 @@
 package ar.edu.unsam.fumigacion.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import org.springframework.amqp.core.Queue
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import org.springframework.amqp.support.converter.MessageConverter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-/**
- * Configuración de Spring AMQP para declarar las colas de RabbitMQ.
- * Cuando la aplicación Spring Boot se inicializa, registrará estos beans
- * y, si no existen en el broker de RabbitMQ, los creará automáticamente.
- */
 @Configuration
 class RabbitMQConfig {
 
-    // --- Nombres de las Colas ---
-    companion object {
-        const val POSICION_QUEUE = "q.posicion.raw"
-        const val FACTURACION_QUEUE = "q.facturacion.acumular"
-    }
-
-    /**
-     * Declara la cola para las posiciones crudas del avión.
-     * Propiedades:
-     * - name: POSICION_QUEUE
-     * - durable: true (La cola sobrevivirá a los reinicios del broker. ES CRÍTICO para facturación).
-     */
     @Bean
-    fun rawPositionQueue(): Queue {
-        return Queue(POSICION_QUEUE, true)
+    fun jsonMessageConverter(): MessageConverter {
+        val objectMapper = ObjectMapper()
+
+        objectMapper.registerModule(
+            KotlinModule.Builder()
+                .withReflectionCacheSize(512)
+                .configure(KotlinFeature.NullToEmptyCollection, false)
+                .configure(KotlinFeature.NullToEmptyMap, false)
+                .configure(KotlinFeature.NullIsSameAsDefault, false)
+                .configure(KotlinFeature.SingletonSupport, false)
+                .configure(KotlinFeature.StrictNullChecks, false)
+                .build()
+        )
+
+        objectMapper.registerModule(JavaTimeModule())
+
+        return Jackson2JsonMessageConverter(objectMapper)
     }
 
-    /**
-     * Declara la cola para los eventos que deben ser acumulados para la facturación.
-     * Propiedades:
-     * - name: FACTURACION_QUEUE
-     * - durable: true (También debe ser duradera para no perder datos de facturación).
-     */
+    // --- Definición de las colas ---
     @Bean
-    fun billingAccumulationQueue(): Queue {
-        return Queue(FACTURACION_QUEUE, true)
+    fun posicionQueue(): Queue {
+        return Queue(POSICION_QUEUE, true) // Durable = true
     }
 
-    // Nota: Por simplicidad, estamos usando el Exchange por defecto (Default Exchange)
-    // de RabbitMQ, que rutea automáticamente al nombre de la cola.
+    @Bean
+    fun facturacionQueue(): Queue {
+        return Queue(FACTURACION_QUEUE, true) // Durable = true
+    }
+
 }

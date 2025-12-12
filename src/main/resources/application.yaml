@@ -2,6 +2,27 @@ spring:
   application:
     name: eg-fumigacion-queue-kotlin
 
+  # Configuración de DataSource (PostgreSQL)
+  datasource:
+    url: jdbc:postgresql://localhost:5442/facturacion_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  # Configuración de JPA (Hibernate)
+  jpa:
+    database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+    # Estrategia de inicialización de la base de datos:
+    # 'update' es recomendable para desarrollo, ya que mantiene los datos existentes.
+    hibernate:
+      ddl-auto: update
+
+  # Configuración de RabbitMQ
   rabbitmq:
     host: localhost
     port: 5672

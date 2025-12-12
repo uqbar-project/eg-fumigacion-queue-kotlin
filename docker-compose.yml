@@ -1,4 +1,31 @@
 services:
+  # Postgres
+  db:
+    image: postgis/postgis
+    platform: linux/amd64
+    container_name: postgres-db-facturacion
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5442:5432'
+    volumes:
+      - facturacion-db-data:/var/lib/postgresql/data
+      - ./Docker/init_db.sh:/docker-entrypoint-initdb.d/01_init_db.sh
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container_facturacion
+    restart: always
+    ports:
+      - "5055:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@phm.edu.ar
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
   # Servicio de RabbitMQ: el broker de mensajería
   rabbitmq:
     image: rabbitmq:3-management # Usamos la imagen con el plugin de Management
@@ -25,3 +52,7 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+
+volumes:
+  facturacion-db-data: {}
+  pgadmin-data: {}
