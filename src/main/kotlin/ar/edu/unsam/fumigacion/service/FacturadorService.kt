@@ -1,14 +1,11 @@
 package ar.edu.unsam.fumigacion.service
 
-import ar.edu.unsam.fumigacion.config.FACTURACION_QUEUE
 import ar.edu.unsam.fumigacion.domain.TiempoFumigacionCliente
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Service
 
 @Service
 class FacturadorService() {
 
-    @RabbitListener(queues = [FACTURACION_QUEUE])
     fun acumularTiempo(tiempo: TiempoFumigacionCliente) {
 
         // --- 1. Lógica de Agrupación y Persistencia ---

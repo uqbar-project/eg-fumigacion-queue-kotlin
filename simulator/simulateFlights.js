@@ -1,92 +1,103 @@
-// Simulador de vuelo para RabbitMQ con paso garantizado por 3 clientes
 import amqp from "amqplib"
 
-// --- Config RabbitMQ ---
+// --------------------
+// Config RabbitMQ
+// --------------------
 const RABBITMQ_URL = "amqp://localhost"
 const QUEUE_NAME = "q.posicion.raw"
 
-// --- Utilidades de geometría ---
-function rectangle(x1, y1, x2, y2) {
-    return {
-        minLat: Math.min(x1, x2),
-        maxLat: Math.max(x1, x2),
-        minLng: Math.min(y1, y2),
-        maxLng: Math.max(y1, y2)
-    }
-}
-
-function getCenter(rectangle) {
-    return {
-        lat: (rectangle.minLat + rectangle.maxLat) / 2,
-        lng: (rectangle.minLng + rectangle.maxLng) / 2
-    }
-}
-
-const CLIENTES = [
-    { id: 1, parcela: rectangle(-35.0005, -60.0005, -34.9995, -59.9995) },
-    { id: 2, parcela: rectangle(-35.002, -60.002, -35.001, -60.001) },
-    { id: 3, parcela: rectangle(-34.998, -60.003, -34.997, -60.002) }
-]
-
-// --- Ruta: centro de cada parcela ---
-const WAYPOINTS = CLIENTES.map(cliente => getCenter(cliente.parcela))
-
-// Empezar en el primer punto
-let currentIndex = 0
-let currentPos = { ...WAYPOINTS[0] }
-
-// Speed del avión por tick (0.00005 ≈ 5 metros)
-const STEP = 0.00005
-
-function moveTowards(target) {
-    let dx = target.lat - currentPos.lat
-    let dy = target.lng - currentPos.lng
-
-    const dist = Math.sqrt(dx*dx + dy*dy)
-
-    if (dist < STEP) {
-        // Llegamos, pasamos al siguiente
-        currentIndex = (currentIndex + 1) % WAYPOINTS.length
-    } else {
-        currentPos.lat += (dx / dist) * STEP
-        currentPos.lng += (dy / dist) * STEP
-    }
-}
-
-// --- Simulación ---
+// --------------------
+// Config vuelo
+// --------------------
 const AVION_ID = 42
 const VUELO_ID = `VUELO-${Date.now()}`
-const INTERVALO_MS = 500
 
-async function simularVuelo() {
-    let connection = await amqp.connect(RABBITMQ_URL)
-    let channel = await connection.createChannel()
-    await channel.assertQueue(QUEUE_NAME, { durable: true })
+// Origen y destino (lat, lng)
+const ORIGEN = {x: -35.0000, y: -60.0000}
+const DESTINO = {x: -34.9970, y: -60.0030}
 
-    console.log(`✈️ Vuelo ${VUELO_ID} iniciando. Pasando por 3 clientes en loop.`)
+// Velocidad en grados / segundo (~5 m)
+const VELOCIDAD = 0.00005
 
-    setInterval(() => {
-        const target = WAYPOINTS[currentIndex]
-        moveTowards(target)
+// Cada cuánto publicamos (1 segundo)
+const INTERVALO_MS = 1000
 
-        const mensaje = {
-            avionId: AVION_ID,
-            vueloId: VUELO_ID,
-            timestamp: new Date().toISOString(),
-            latitud: +currentPos.lat.toFixed(6),
-            longitud: +currentPos.lng.toFixed(6),
-        }
+// --------------------
+// Lógica de movimiento
+// --------------------
+function crearAvion(origen, destino, velocidad) {
+  const dx = destino.x - origen.x
+  const dy = destino.y - origen.y
+  const distanciaTotal = Math.sqrt(dx * dx + dy * dy)
 
-        channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(mensaje)), {
-            persistent: true,
-            contentType: "application/json",
-            priority: 1,
-        })
-
-        console.log(
-            `[${new Date().toLocaleTimeString()}] Posición enviada → (${mensaje.latitud}, ${mensaje.longitud}) → Cliente ${currentIndex}`
-        )
-    }, INTERVALO_MS)
+  return {
+    posicion: {...origen},
+    destino,
+    velocidad,
+    ux: dx / distanciaTotal,
+    uy: dy / distanciaTotal,
+    distanciaRecorrida: 0,
+    distanciaTotal
+  }
 }
 
-simularVuelo()
+function avanzarUnSegundo(avion) {
+  if (avion.distanciaRecorrida >= avion.distanciaTotal) {
+    avion.posicion.x = avion.destino.x
+    avion.posicion.y = avion.destino.y
+    return false
+  }
+
+  avion.posicion.x += avion.ux * avion.velocidad
+  avion.posicion.y += avion.uy * avion.velocidad
+  avion.distanciaRecorrida += avion.velocidad
+
+  return true
+}
+
+// --------------------
+// Simulación + Queue
+// --------------------
+async function simularVuelo() {
+  const connection = await amqp.connect(RABBITMQ_URL)
+  const channel = await connection.createChannel()
+  await channel.assertQueue(QUEUE_NAME, {durable: true})
+
+  const avion = crearAvion(ORIGEN, DESTINO, VELOCIDAD)
+
+  console.log(`✈️ Vuelo ${VUELO_ID} iniciado`)
+  console.log(`Desde (${ORIGEN.x}, ${ORIGEN.y}) → (${DESTINO.x}, ${DESTINO.y})`)
+
+  const interval = setInterval(() => {
+    const sigue = avanzarUnSegundo(avion)
+
+    const mensaje = {
+      avionId: AVION_ID,
+      vueloId: VUELO_ID,
+      timestamp: new Date().toISOString(),
+      longitud: +avion.posicion.x.toFixed(6),
+      latitud: +avion.posicion.y.toFixed(6),
+    }
+
+    channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(mensaje)), {
+      persistent: true, contentType: "application/json", priority: 1,
+    })
+
+    console.log(`[${new Date().toLocaleTimeString()}] → (${mensaje.latitud}, ${mensaje.longitud})`)
+
+    if (!sigue) {
+      console.log("🛬 Avión llegó al aeroclub destino")
+      clearInterval(interval)
+      setTimeout(() => {
+        channel.close()
+        connection.close()
+        process.exit(0)
+      }, 500)
+    }
+  }, INTERVALO_MS)
+}
+
+simularVuelo().catch(err => {
+  console.error("❌ Error en simulación", err)
+  process.exit(1)
+})

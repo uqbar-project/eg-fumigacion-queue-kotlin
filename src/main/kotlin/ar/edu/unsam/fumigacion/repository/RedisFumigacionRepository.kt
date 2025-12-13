@@ -29,8 +29,8 @@ class RedisFumigacionRepository(
 //        return redisTemplate.execute(script, listOf(key), clienteId.toString()) ?: 0
 //    }
 
-    fun incrementCounter(clienteId: Long): Long? {
-        val key = "contador:cliente:$clienteId"
+    fun incrementCounter(timestamp: String, clienteId: Long): Long? {
+        val key = "$timestamp:$clienteId"
         return stringRedisTemplate.opsForValue().increment(key)
     }
 

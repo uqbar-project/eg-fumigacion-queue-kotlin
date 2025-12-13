@@ -13,33 +13,54 @@ class FumigacionSeeder(
 
     override fun run(vararg args: String?) {
 
-        if (clienteRepo.count() == 0L) {
-            val clientes = listOf(
-                Cliente(
-                    razonSocial = "Cliente Norte",
-                    parcela = Coordenadas(
-                        -60.003, -34.998,
-                        -59.998, -34.995
-                    )
-                ),
-                Cliente(
-                    razonSocial = "Cliente Centro",
-                    parcela = Coordenadas(
-                        -60.002, -35.002,
-                        -59.997, -34.999
-                    )
-                ),
-                Cliente(
-                    razonSocial = "Cliente Sur",
-                    parcela = Coordenadas(
-                        -60.001, -35.004,
-                        -59.996, -35.001
-                    )
+        if (clienteRepo.count() > 0L) return
+
+        /*
+         * Recorrido del avión (script JS):
+         *
+         * ORIGEN  : lat -35.0000 / lng -60.0000
+         * DESTINO : lat -34.9970 / lng -60.0030
+         *
+         * Dirección: sureste -> noroeste
+         */
+
+        val clientes = listOf(
+
+            // ✈️ Primer cliente (no entra enseguida)
+            Cliente(
+                razonSocial = "Cliente 1",
+                parcela = Coordenadas(
+                    xInicial = -34.9996, // lat
+                    yInicial = -60.0008, // lng
+                    xFinal   = -34.9990,
+                    yFinal   = -60.0016
+                )
+            ),
+
+            // 🌾 Cliente central (más tiempo dentro)
+            Cliente(
+                razonSocial = "Cliente 2",
+                parcela = Coordenadas(
+                    xInicial = -34.9990,
+                    yInicial = -60.0016,
+                    xFinal   = -34.9982,
+                    yFinal   = -60.0024
+                )
+            ),
+
+            // 🌾 Último cliente antes de salir
+            Cliente(
+                razonSocial = "Cliente 3",
+                parcela = Coordenadas(
+                    xInicial = -34.9982,
+                    yInicial = -60.0025,
+                    xFinal   = -34.9969,
+                    yFinal   = -60.0031
                 )
             )
+        )
 
-            clienteRepo.saveAll(clientes)
-            println(">>> Clientes precargados!")
-        }
+        clienteRepo.saveAll(clientes)
+        println(">>> \uD83C\uDF3E Clientes precargados")
     }
 }

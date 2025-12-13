@@ -39,9 +39,4 @@ class RabbitMQConfig {
         return Queue(POSICION_QUEUE, true) // Durable = true
     }
 
-    @Bean
-    fun facturacionQueue(): Queue {
-        return Queue(FACTURACION_QUEUE, true) // Durable = true
-    }
-
 }

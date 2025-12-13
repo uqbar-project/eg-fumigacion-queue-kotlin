@@ -9,6 +9,9 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Service
 class GeoprocesadorParcelasService(
@@ -26,7 +29,7 @@ class GeoprocesadorParcelasService(
 
         if (cliente != null) {
             // Incrementar el contador para este cliente en el minuto actual
-            val count = redisFumigacionRepository.incrementCounter(cliente.id!!)
+            val count = redisFumigacionRepository.incrementCounter(formatearAMinuto(posicion.timestamp), cliente.id)
             
             println("▶️ Vuelo [${posicion.vueloId}] detectado en parcela de cliente ${cliente.razonSocial}. " +
                    "Contador actualizado: $count")
@@ -40,4 +43,13 @@ class GeoprocesadorParcelasService(
     fun identificarClientePorUbicacion(x: Double, y: Double): Cliente? {
         return clienteRepository.findByCoordenadasContienePunto(x, y)
     }
+
+    fun formatearAMinuto(timestamp: Instant): String {
+        val formatter = DateTimeFormatter
+            .ofPattern("dd-MM-yyyy-HH:mm")
+            .withZone(ZoneId.systemDefault())
+        return formatter.format(timestamp)
+    }
+
+
 }
