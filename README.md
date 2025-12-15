@@ -37,8 +37,17 @@ En la consola vas a ver la información al azar que se produce y se envía a la 
 
 El proceso simula un vuelo que pasa por 3 clientes conocidos en nuestra base Postgres.
 
+TODO: Contar lógica de vuelo del avión que va de un aeroclub a otro.
+
 Una vez finalizado el proceso podés ver la información generada en la cola siguiendo [estos pasos](./docs/como-ver-info-queue.md)
 
 ## Geoprocesador de Parcelas
 
-TODO
+El proceso donde convertimos las posiciones x/y en información de facturación de nuestros clientes, procesando
+
+- [por un lado la queue con un mecanismo de retry](./docs/procesamiento-queue-con-retry.md)
+- y actualizando un buffer intermedio en Redis
+
+## Guardando datos de facturación
+
+Cada una hora procesamos los resultados

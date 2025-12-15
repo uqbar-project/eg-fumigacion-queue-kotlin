@@ -5,8 +5,11 @@ import ar.edu.unsam.fumigacion.domain.Cliente
 import ar.edu.unsam.fumigacion.domain.PosicionAvion
 import ar.edu.unsam.fumigacion.repository.ClienteRepository
 import ar.edu.unsam.fumigacion.repository.RedisFumigacionRepository
+import com.rabbitmq.client.Channel
 import org.springframework.amqp.rabbit.annotation.RabbitListener
+import org.springframework.amqp.support.AmqpHeaders
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -23,18 +26,46 @@ class GeoprocesadorParcelasService(
 
     @RabbitListener(queues = [POSICION_QUEUE])
     @Transactional
-    fun procesarPosicion(posicion: PosicionAvion) {
-        // --- 1. Lógica de Geoposicionamiento ---
-        val cliente = identificarClientePorUbicacion(posicion.longitud, posicion.latitud)
+    fun procesarPosicion(
+        posicion: PosicionAvion,
+        channel: Channel,
+        @Header(AmqpHeaders.DELIVERY_TAG) tag: Long,
+        @Header(name = "x-death", required = false) xDeath: List<Map<String, Any>>?
+    ) {
+        try {
+            val cliente = identificarClientePorUbicacion(
+                posicion.longitud,
+                posicion.latitud
+            )
 
-        if (cliente != null) {
-            // Incrementar el contador para este cliente en el minuto actual
-            val count = redisFumigacionRepository.incrementCounter(formatearAMinuto(posicion.timestamp), cliente.id)
-            
-            println("▶️ Vuelo [${posicion.vueloId}] detectado en parcela de cliente ${cliente.razonSocial}. " +
-                   "Contador actualizado: $count")
-        } else {
-            println("▶️ Vuelo [${posicion.vueloId}] fuera de parcelas, posición descartada.")
+            if (cliente != null) {
+                redisFumigacionRepository.incrementCounter(
+                    formatearAMinuto(posicion.timestamp),
+                    cliente.id
+                )
+            }
+
+            channel.basicAck(tag, false)
+
+        } catch (ex: Exception) {
+            val retryCount = xDeath
+                ?.firstOrNull { it["queue"] == POSICION_QUEUE }
+                ?.get("count")
+                ?.toString()
+                ?.toLong() ?: 0
+
+            if (retryCount >= 3) {
+                println("☠️ Mensaje enviado a DLQ luego de $retryCount reintentos")
+                channel.basicReject(tag, false)
+                // si no tuviera configurada la dead letter exchange el mensaje se pierde
+                // pero como está configurada va la DLQ (ver RabbitMQConfig)
+                // basicReject con el segundo parámetro en true => vuelve a encolarse (puede
+                // ser consumido por el mismo listener o por otro), ojo => puede llevarte a tener
+                // un timeout
+            } else {
+                println("🔁 Retry #${retryCount + 1}")
+                channel.basicNack(tag, false, false) // retry
+            }
         }
     }
 
@@ -50,6 +81,5 @@ class GeoprocesadorParcelasService(
             .withZone(ZoneId.systemDefault())
         return formatter.format(timestamp)
     }
-
 
 }

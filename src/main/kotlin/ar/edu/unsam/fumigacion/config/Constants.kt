@@ -1,4 +1,10 @@
 package ar.edu.unsam.fumigacion.config
 
-// La cola que escucha este consumidor
-const val POSICION_QUEUE = "q.posicion.raw"
+const val POSICION_EXCHANGE = "posicion.exchange"
+const val POSICION_QUEUE = "posicion.queue"
+
+const val POSICION_RETRY_EXCHANGE = "posicion.retry.exchange"
+const val POSICION_RETRY_QUEUE = "posicion.retry.queue"
+
+const val POSICION_DLQ_EXCHANGE = "posicion.dlq.exchange"
+const val POSICION_DLQ = "posicion.dlq"

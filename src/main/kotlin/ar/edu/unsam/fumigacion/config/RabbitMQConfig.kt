@@ -2,9 +2,10 @@ package ar.edu.unsam.fumigacion.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
-import org.springframework.amqp.core.Queue
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.QueueBuilder
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.amqp.support.converter.MessageConverter
 import org.springframework.context.annotation.Bean
@@ -13,30 +14,80 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class RabbitMQConfig {
 
+    // ---------------------------
+    // JSON
+    // ---------------------------
     @Bean
     fun jsonMessageConverter(): MessageConverter {
         val objectMapper = ObjectMapper()
-
-        objectMapper.registerModule(
-            KotlinModule.Builder()
-                .withReflectionCacheSize(512)
-                .configure(KotlinFeature.NullToEmptyCollection, false)
-                .configure(KotlinFeature.NullToEmptyMap, false)
-                .configure(KotlinFeature.NullIsSameAsDefault, false)
-                .configure(KotlinFeature.SingletonSupport, false)
-                .configure(KotlinFeature.StrictNullChecks, false)
-                .build()
-        )
-
-        objectMapper.registerModule(JavaTimeModule())
+            .registerModule(
+                KotlinModule.Builder()
+                    .withReflectionCacheSize(512)
+                    .build()
+            )
+            .registerModule(JavaTimeModule())
 
         return Jackson2JsonMessageConverter(objectMapper)
     }
 
-    // --- Definición de las colas ---
+    // ---------------------------
+    // Exchanges
+    // ---------------------------
     @Bean
-    fun posicionQueue(): Queue {
-        return Queue(POSICION_QUEUE, true) // Durable = true
-    }
+    fun posicionExchange() =
+        DirectExchange(POSICION_EXCHANGE)
 
+    @Bean
+    fun posicionRetryExchange() =
+        DirectExchange(POSICION_RETRY_EXCHANGE)
+
+    @Bean
+    fun posicionDlqExchange() =
+        DirectExchange(POSICION_DLQ_EXCHANGE)
+
+    // ---------------------------
+    // Queues
+    // ---------------------------
+    @Bean
+    fun posicionQueue() =
+        QueueBuilder.durable(POSICION_QUEUE)
+            // cuando falla → retry exchange
+            .withArgument("x-dead-letter-exchange", POSICION_RETRY_EXCHANGE)
+            .withArgument("x-dead-letter-routing-key", POSICION_RETRY_QUEUE)
+            .build()
+
+    @Bean
+    fun posicionRetryQueue() =
+        QueueBuilder.durable(POSICION_RETRY_QUEUE)
+            // ⏱ delay de retry
+            .withArgument("x-message-ttl", 10_000)
+            // cuando vence → vuelve a la main
+            .withArgument("x-dead-letter-exchange", POSICION_EXCHANGE)
+            .withArgument("x-dead-letter-routing-key", POSICION_QUEUE)
+            .build()
+
+    @Bean
+    fun posicionDlq() =
+        QueueBuilder.durable(POSICION_DLQ).build()
+
+    // ---------------------------
+    // Bindings
+    // ---------------------------
+    @Bean
+    fun bindPosicionQueue() =
+        BindingBuilder.bind(posicionQueue())
+            .to(posicionExchange())
+            .with(POSICION_QUEUE)
+
+    @Bean
+    fun bindRetryQueue() =
+        BindingBuilder.bind(posicionRetryQueue())
+            .to(posicionRetryExchange())
+            .with(POSICION_RETRY_QUEUE)
+
+    @Bean
+    fun bindDlq() =
+        BindingBuilder.bind(posicionDlq())
+            .to(posicionDlqExchange())
+            .with(POSICION_DLQ)
 }
