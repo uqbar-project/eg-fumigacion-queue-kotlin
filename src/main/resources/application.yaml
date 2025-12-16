@@ -12,10 +12,7 @@ spring:
   # Configuración de JPA (Hibernate)
   jpa:
     database-platform: org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+    show-sql: false
 
     # Estrategia de inicialización de la base de datos:
     # 'update' es recomendable para desarrollo, ya que mantiene los datos existentes.

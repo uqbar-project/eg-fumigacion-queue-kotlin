@@ -12,9 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 class GeoprocesadorParcelasService(
@@ -24,7 +21,7 @@ class GeoprocesadorParcelasService(
     @Autowired
     private lateinit var clienteRepository: ClienteRepository
 
-    @RabbitListener(queues = [POSICION_QUEUE])
+    @RabbitListener(queues = [POSICION_QUEUE], ackMode = "MANUAL")
     @Transactional
     fun procesarPosicion(
         posicion: PosicionAvion,
@@ -39,14 +36,16 @@ class GeoprocesadorParcelasService(
             )
 
             if (cliente != null) {
-                redisFumigacionRepository.incrementCounter(
-                    formatearAMinuto(posicion.timestamp),
-                    cliente.id
+                redisFumigacionRepository.registrarPaso(
+                    posicion.vueloId,
+                    cliente.id,
+                    posicion.timestamp
                 )
+                println("Confirmamos vuelo a ${cliente.id} - ${cliente.razonSocial}")
+            } else {
+                println("Volando en zona sin clientes")
             }
-
             channel.basicAck(tag, false)
-
         } catch (ex: Exception) {
             val retryCount = xDeath
                 ?.firstOrNull { it["queue"] == POSICION_QUEUE }
@@ -73,13 +72,6 @@ class GeoprocesadorParcelasService(
     @Transactional(readOnly = true)
     fun identificarClientePorUbicacion(x: Double, y: Double): Cliente? {
         return clienteRepository.findByCoordenadasContienePunto(x, y)
-    }
-
-    fun formatearAMinuto(timestamp: Instant): String {
-        val formatter = DateTimeFormatter
-            .ofPattern("dd-MM-yyyy-HH:mm")
-            .withZone(ZoneId.systemDefault())
-        return formatter.format(timestamp)
     }
 
 }

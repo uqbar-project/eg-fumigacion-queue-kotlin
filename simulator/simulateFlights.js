@@ -1,10 +1,12 @@
-import amqp from "amqplib"
+import amqp from 'amqplib'
 
 // --------------------
 // Config RabbitMQ
 // --------------------
-const RABBITMQ_URL = "amqp://localhost"
-const QUEUE_NAME = "q.posicion.raw"
+const RABBITMQ_URL = 'amqp://localhost'
+const QUEUE_NAME = 'posicion.queue'
+const QUEUE_RETRY_EXCHANGE = 'posicion.retry.exchange'
+const QUEUE_RETRY_QUEUE = 'posicion.retry.queue'
 
 // --------------------
 // Config vuelo
@@ -61,7 +63,13 @@ function avanzarUnSegundo(avion) {
 async function simularVuelo() {
   const connection = await amqp.connect(RABBITMQ_URL)
   const channel = await connection.createChannel()
-  await channel.assertQueue(QUEUE_NAME, {durable: true})
+  await channel.assertQueue(QUEUE_NAME, {
+    durable: true, 
+    arguments: {
+      'x-dead-letter-exchange': QUEUE_RETRY_EXCHANGE,
+      'x-dead-letter-routing-key': QUEUE_RETRY_QUEUE,
+    }
+  })
 
   const avion = crearAvion(ORIGEN, DESTINO, VELOCIDAD)
 
@@ -80,13 +88,13 @@ async function simularVuelo() {
     }
 
     channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(mensaje)), {
-      persistent: true, contentType: "application/json", priority: 1,
+      persistent: true, contentType: 'application/json', priority: 1,
     })
 
     console.log(`[${new Date().toLocaleTimeString()}] → (${mensaje.latitud}, ${mensaje.longitud})`)
 
     if (!sigue) {
-      console.log("🛬 Avión llegó al aeroclub destino")
+      console.log('🛬 Avión llegó al aeroclub destino')
       clearInterval(interval)
       setTimeout(() => {
         channel.close()
@@ -98,6 +106,6 @@ async function simularVuelo() {
 }
 
 simularVuelo().catch(err => {
-  console.error("❌ Error en simulación", err)
+  console.error('❌ Error en simulación', err)
   process.exit(1)
 })

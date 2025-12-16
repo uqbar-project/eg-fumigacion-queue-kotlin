@@ -48,7 +48,7 @@ Esto lo hacemos en RabbitMQConfig:
 Además veamos cómo está escrito nuestro listener:
 
 ```kotlin
-    @RabbitListener(queues = [POSICION_QUEUE])
+    @RabbitListener(queues = [POSICION_QUEUE], ackMode = "MANUAL")
     @Transactional
     fun procesarPosicion(
         posicion: PosicionAvion,

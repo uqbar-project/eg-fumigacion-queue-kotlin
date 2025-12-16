@@ -29,10 +29,10 @@ npm run dev
 En la consola vas a ver la información al azar que se produce y se envía a la cola que la almacena:
 
 ```bash
-✈️ Vuelo VUELO-1765505042727 iniciando. Pasando por 3 clientes en loop.
-[11:04:03 PM] Posición enviada → (-35, -60) → hacia Cliente 2
-[11:04:03 PM] Posición enviada → (-35.000035, -60.000035) → hacia Cliente 2
-[11:04:04 PM] Posición enviada → (-35.000071, -60.000071) → hacia Cliente 2
+✈️ Vuelo VUELO-1765841772158 iniciado
+Desde (-35, -60) → (-34.997, -60.003)
+[8:36:13 PM] → (-60.000035, -34.999965)
+[8:36:14 PM] → (-60.000071, -34.999929)
 ```
 
 El proceso simula un vuelo que pasa por 3 clientes conocidos en nuestra base Postgres.
@@ -46,7 +46,7 @@ Una vez finalizado el proceso podés ver la información generada en la cola sig
 El proceso donde convertimos las posiciones x/y en información de facturación de nuestros clientes, procesando
 
 - [por un lado la queue con un mecanismo de retry](./docs/procesamiento-queue-con-retry.md)
-- y actualizando un buffer intermedio en Redis
+- [y actualizando un buffer intermedio en Redis](./docs/buffer-en-redis.md)
 
 ## Guardando datos de facturación
 

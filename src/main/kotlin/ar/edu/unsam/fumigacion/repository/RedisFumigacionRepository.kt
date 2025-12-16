@@ -1,44 +1,32 @@
 package ar.edu.unsam.fumigacion.repository
 
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.Instant
 
 @Repository
 class RedisFumigacionRepository(
-    private val redisTemplate: RedisTemplate<String, Any>,
     private val stringRedisTemplate: StringRedisTemplate
 ) {
-    companion object {
-        private val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd:HH:mm")
-        private val INCREMENT_SCRIPT = """
-            local current = redis.call('HGET', KEYS[1], ARGV[1])
-            if current == false then
-                redis.call('HSET', KEYS[1], ARGV[1], 1)
-                return 1
-            else
-                return redis.call('HINCRBY', KEYS[1], ARGV[1], 1)
-        """.trimIndent()
-    }
 
-//    fun incrementCounter(clienteId: Long): Long {
-//        val key = getCurrentMinuteKey()
-//        val script = RedisScript.of<Long>(INCREMENT_SCRIPT, Long::class.java)
-//        return redisTemplate.execute(script, listOf(key), clienteId.toString()) ?: 0
-//    }
+    fun registrarPaso(
+        vueloId: String,
+        clienteId: Long,
+        timestamp: Instant
+    ): Long {
 
-    fun incrementCounter(timestamp: String, clienteId: Long): Long? {
-        val key = "$timestamp:$clienteId"
-        return stringRedisTemplate.opsForValue().increment(key)
-    }
+        val key = "fumigacion:vuelo:$vueloId:cliente:$clienteId"
+        val ops = stringRedisTemplate.opsForHash<String, String>()
 
-    fun getCountsForMinute(minuteKey: String): Map<String, String>? {
-        return redisTemplate.opsForHash<String, String>().entries(minuteKey)
-    }
+        // contador de segundos
+        val count = ops.increment(key, "cantidad", 1)
 
-    private fun getCurrentMinuteKey(): String {
-        return "fumigacion:${LocalDateTime.now().format(DATE_TIME_FORMATTER)}"
+        // primera vez
+        ops.putIfAbsent(key, "desde", timestamp.toString())
+
+        // última vez (siempre se pisa)
+        ops.put(key, "hasta", timestamp.toString())
+
+        return count
     }
 }
