@@ -18,28 +18,8 @@ docker compose up -d
 
 Es el proceso que simula el despegue de un avión por lo que va a estar emitiendo coordenadas que simulan el vuelo sobre diferentes parcelas.
 
-Para dispararlo posicionate en la carpeta [simulator](./simulator) y ejecutá
-
-```bash
-nvm use
-npm install
-npm run dev
-```
-
-En la consola vas a ver la información al azar que se produce y se envía a la cola que la almacena:
-
-```bash
-✈️ Vuelo VUELO-1765841772158 iniciado
-Desde (-35, -60) → (-34.997, -60.003)
-[8:36:13 PM] → (-60.000035, -34.999965)
-[8:36:14 PM] → (-60.000071, -34.999929)
-```
-
-El proceso simula un vuelo que pasa por 3 clientes conocidos en nuestra base Postgres.
-
-TODO: Contar lógica de vuelo del avión que va de un aeroclub a otro.
-
-Una vez finalizado el proceso podés ver la información generada en la cola siguiendo [estos pasos](./docs/como-ver-info-queue.md)
+- [podés ver cómo invocarlo en esta página](./docs/simulador-vuelo.md)
+- Una vez finalizado el proceso podés ver la información generada en la cola siguiendo [estos pasos](./docs/como-ver-info-queue.md)
 
 ## Geoprocesador de Parcelas
 
@@ -48,6 +28,11 @@ El proceso donde convertimos las posiciones x/y en información de facturación 
 - [por un lado la queue con un mecanismo de retry](./docs/procesamiento-queue-con-retry.md)
 - [y actualizando un buffer intermedio en Redis](./docs/buffer-en-redis.md)
 
-## Guardando datos de facturación
+## Facturación
 
-Cada una hora procesamos los resultados
+Cuando el vuelo se termina,
+
+- [el proceso de Node nos avisa dejando un mensaje en otra cola](./docs/final-vuelo.md)
+- [y otro listener será entonces el encargado de procesar los resultados y generar una factura](./docs/facturacion.md)
+
+De esa manera seguimos el modelo event-driven.
