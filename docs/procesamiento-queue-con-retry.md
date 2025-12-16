@@ -108,6 +108,20 @@ Por otra parte, la queue no participa de la transacción dentro del método del 
 
 tiene efecto inmediato, a diferencia de cuando usamos llamadas dentro de JPA de Springboot (donde un error no chequeado automáticamente genera un _rollback_ de la transacción).
 
+Un detalle importante es que nuestro listener tiene que indicar que el ACK es manual:
+
+```kotlin
+@RabbitListener(queues = [POSICION_QUEUE], ackMode = "MANUAL")
+```
+
+de lo contrario te aparecerá un mensaje como el que sigue:
+
+```text
+com.rabbitmq.client.ShutdownSignalException: channel error; protocol method: #method<channel.close>(reply-code=406, reply-text=PRECONDITION_FAILED - unknown delivery tag 1, class-id=60, method-id=80)
+	at com.rabbitmq.client.impl.ChannelN.asyncShutdown(ChannelN.java:528) ~[amqp-client-5.25.0.jar:5.25.0]
+	at com.rabbitmq.client.impl.ChannelN.processAsync(ChannelN.java:349) ~[amqp-client-5.25.0.jar:5.25.0]
+```
+
 ## Header X-Death
 
 La manera en que el listener puede contar los reintentos es a través de `x-death`, un header automático que agrega RabbitMQ a un mensaje cuando ese mensaje es dead-lettered, es decir, cuando:

@@ -20,7 +20,7 @@ class FacturadorService(
     private val facturaRepository: FacturaRepository,
 ) {
 
-    @RabbitListener(queues = [FINISHED_FLIGHT_QUEUE])
+    @RabbitListener(queues = [FINISHED_FLIGHT_QUEUE], ackMode = "MANUAL")
     @Transactional
     fun procesarVueloTerminado(
         vueloTerminado: VueloTerminado,
@@ -31,7 +31,7 @@ class FacturadorService(
         try {
             val facturas = redisFumigacionRepository.obtenerDatosDeVuelo(vueloTerminado.vueloId).map {
                 fumigacionCliente -> Factura(
-                    descripcion = "Servicio de fumigación - vuelo ${vueloTerminado.vueloId}",
+                    descripcion = "Servicio de fumigación - ${vueloTerminado.vueloId}",
                     total = fumigacionCliente.cantidad * 150.0,
                     // no hace SELECT, solo crea un proxy (no lo usamos así que no dispara queries a la BD)
                     cliente = clienteRepository.getReferenceById(fumigacionCliente.clienteId),
