@@ -19,13 +19,13 @@ docker compose up -d
 Es el proceso que simula el despegue de un avión por lo que va a estar emitiendo coordenadas que simulan el vuelo sobre diferentes parcelas.
 
 - [podés ver cómo invocarlo en esta página](./docs/simulador-vuelo.md)
-- Una vez finalizado el proceso podés ver la información generada en la cola siguiendo [estos pasos](./docs/como-ver-info-queue.md)
+- [y una vez finalizado el proceso podés ver la información generada en la cola siguiendo estos pasos](./docs/como-ver-info-queue.md)
 
 ## Geoprocesador de Parcelas
 
-El proceso donde convertimos las posiciones x/y en información de facturación de nuestros clientes, procesando
+El proceso donde convertimos las posiciones x/y en información de facturación de nuestros clientes
 
-- [por un lado la queue con un mecanismo de retry](./docs/procesamiento-queue-con-retry.md)
+- [leyendo la queue con un mecanismo de reintentos](./docs/procesamiento-queue-con-retry.md)
 - [y actualizando un buffer intermedio en Redis](./docs/buffer-en-redis.md)
 
 ## Facturación
@@ -35,4 +35,4 @@ Cuando el vuelo se termina,
 - [el proceso de Node nos avisa dejando un mensaje en otra cola](./docs/final-vuelo.md)
 - [y otro listener será entonces el encargado de procesar los resultados y generar una factura](./docs/facturacion.md)
 
-De esa manera seguimos el modelo event-driven.
+De esa manera seguimos el modelo _event-driven_.

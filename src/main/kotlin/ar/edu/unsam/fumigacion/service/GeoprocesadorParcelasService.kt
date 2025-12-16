@@ -2,7 +2,7 @@ package ar.edu.unsam.fumigacion.service
 
 import ar.edu.unsam.fumigacion.config.POSICION_QUEUE
 import ar.edu.unsam.fumigacion.domain.Cliente
-import ar.edu.unsam.fumigacion.domain.PosicionAvion
+import ar.edu.unsam.fumigacion.dto.PosicionAvion
 import ar.edu.unsam.fumigacion.repository.ClienteRepository
 import ar.edu.unsam.fumigacion.repository.RedisFumigacionRepository
 import com.rabbitmq.client.Channel

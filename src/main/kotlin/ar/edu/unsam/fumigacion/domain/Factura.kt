@@ -16,7 +16,11 @@ class Factura(
     var descripcion: String = "",
 
     @Column(nullable = false)
-    var total: Double = 0.0
+    var total: Double = 0.0,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", nullable = false)
+    var cliente: Cliente,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

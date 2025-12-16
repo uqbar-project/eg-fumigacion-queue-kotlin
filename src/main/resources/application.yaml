@@ -18,6 +18,12 @@ spring:
     # 'update' es recomendable para desarrollo, ya que mantiene los datos existentes.
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_updates: true
+        order_inserts: true
 
   # Configuración de RabbitMQ
   rabbitmq:

@@ -1,4 +1,4 @@
-package ar.edu.unsam.fumigacion.domain
+package ar.edu.unsam.fumigacion.dto
 
 import java.time.Instant
 

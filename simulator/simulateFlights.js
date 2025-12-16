@@ -4,9 +4,11 @@ import amqp from 'amqplib'
 // Config RabbitMQ
 // --------------------
 const RABBITMQ_URL = 'amqp://localhost'
-const QUEUE_NAME = 'posicion.queue'
-const QUEUE_RETRY_EXCHANGE = 'posicion.retry.exchange'
-const QUEUE_RETRY_QUEUE = 'posicion.retry.queue'
+const QUEUE_POSITION = 'posicion.queue'
+const QUEUE_POSITION_RETRY_EXCHANGE = 'posicion.retry.exchange'
+const QUEUE_POSITION_RETRY_QUEUE = 'posicion.retry.queue'
+
+const QUEUE_FINISHED_FLIGHT = 'finished.flight.queue'
 
 // --------------------
 // Config vuelo
@@ -63,11 +65,11 @@ function avanzarUnSegundo(avion) {
 async function simularVuelo() {
   const connection = await amqp.connect(RABBITMQ_URL)
   const channel = await connection.createChannel()
-  await channel.assertQueue(QUEUE_NAME, {
+  await channel.assertQueue(QUEUE_POSITION, {
     durable: true, 
     arguments: {
-      'x-dead-letter-exchange': QUEUE_RETRY_EXCHANGE,
-      'x-dead-letter-routing-key': QUEUE_RETRY_QUEUE,
+      'x-dead-letter-exchange': QUEUE_POSITION_RETRY_EXCHANGE,
+      'x-dead-letter-routing-key': QUEUE_POSITION_RETRY_QUEUE,
     }
   })
 
@@ -76,7 +78,7 @@ async function simularVuelo() {
   console.log(`✈️ Vuelo ${VUELO_ID} iniciado`)
   console.log(`Desde (${ORIGEN.x}, ${ORIGEN.y}) → (${DESTINO.x}, ${DESTINO.y})`)
 
-  const interval = setInterval(() => {
+  const interval = setInterval(async () => {
     const sigue = avanzarUnSegundo(avion)
 
     const mensaje = {
@@ -87,7 +89,7 @@ async function simularVuelo() {
       latitud: +avion.posicion.y.toFixed(6),
     }
 
-    channel.sendToQueue(QUEUE_NAME, Buffer.from(JSON.stringify(mensaje)), {
+    channel.sendToQueue(QUEUE_POSITION, Buffer.from(JSON.stringify(mensaje)), {
       persistent: true, contentType: 'application/json', priority: 1,
     })
 
@@ -96,6 +98,13 @@ async function simularVuelo() {
     if (!sigue) {
       console.log('🛬 Avión llegó al aeroclub destino')
       clearInterval(interval)
+
+      channel.sendToQueue(QUEUE_FINISHED_FLIGHT, Buffer.from(JSON.stringify({
+        vueloId: VUELO_ID,
+      })), {
+        persistent: true, contentType: 'application/json', priority: 1,
+      })
+
       setTimeout(() => {
         channel.close()
         connection.close()

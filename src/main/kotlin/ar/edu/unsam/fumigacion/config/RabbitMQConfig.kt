@@ -45,6 +45,18 @@ class RabbitMQConfig {
     fun posicionDlqExchange() =
         DirectExchange(POSICION_DLQ_EXCHANGE)
 
+    @Bean
+    fun posicionDlq() =
+        QueueBuilder.durable(POSICION_DLQ).build()
+
+    @Bean
+    fun finishedFlightExchange() =
+        DirectExchange(FINISHED_FLIGHT_EXCHANGE)
+
+    @Bean
+    fun finishedFlightDlqExchange() =
+        DirectExchange(FINISHED_FLIGHT_DLQ_EXCHANGE)
+
     // ---------------------------
     // Queues
     // ---------------------------
@@ -67,8 +79,16 @@ class RabbitMQConfig {
             .build()
 
     @Bean
-    fun posicionDlq() =
-        QueueBuilder.durable(POSICION_DLQ).build()
+    fun finishedFlightQueue() =
+        QueueBuilder.durable(FINISHED_FLIGHT_QUEUE)
+            // cualquier reject → DLQ
+            .withArgument("x-dead-letter-exchange", FINISHED_FLIGHT_DLQ_EXCHANGE)
+            .withArgument("x-dead-letter-routing-key", FINISHED_FLIGHT_DLQ)
+            .build()
+
+    @Bean
+    fun finishedFlightDlq() =
+        QueueBuilder.durable(FINISHED_FLIGHT_DLQ).build()
 
     // ---------------------------
     // Bindings
@@ -90,4 +110,17 @@ class RabbitMQConfig {
         BindingBuilder.bind(posicionDlq())
             .to(posicionDlqExchange())
             .with(POSICION_DLQ)
+
+    @Bean
+    fun bindFinishedFlightQueue() =
+        BindingBuilder.bind(finishedFlightQueue())
+            .to(finishedFlightExchange())
+            .with(FINISHED_FLIGHT_QUEUE)
+
+    @Bean
+    fun bindFinishedFlightDlq() =
+        BindingBuilder.bind(finishedFlightDlq())
+            .to(finishedFlightDlqExchange())
+            .with(FINISHED_FLIGHT_DLQ)
+
 }

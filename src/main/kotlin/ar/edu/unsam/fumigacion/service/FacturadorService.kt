@@ -1,27 +1,55 @@
 package ar.edu.unsam.fumigacion.service
 
-import ar.edu.unsam.fumigacion.domain.TiempoFumigacionCliente
+import ar.edu.unsam.fumigacion.config.FINISHED_FLIGHT_QUEUE
+import ar.edu.unsam.fumigacion.domain.Factura
+import ar.edu.unsam.fumigacion.dto.VueloTerminado
+import ar.edu.unsam.fumigacion.repository.ClienteRepository
+import ar.edu.unsam.fumigacion.repository.FacturaRepository
+import ar.edu.unsam.fumigacion.repository.RedisFumigacionRepository
+import org.springframework.amqp.rabbit.annotation.RabbitListener
+import org.springframework.amqp.support.AmqpHeaders
+import org.springframework.messaging.handler.annotation.Header
 import org.springframework.stereotype.Service
+import com.rabbitmq.client.Channel
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-class FacturadorService() {
+class FacturadorService(
+    private val redisFumigacionRepository: RedisFumigacionRepository,
+    private val clienteRepository: ClienteRepository,
+    private val facturaRepository: FacturaRepository,
+) {
 
-    fun acumularTiempo(tiempo: TiempoFumigacionCliente) {
+    @RabbitListener(queues = [FINISHED_FLIGHT_QUEUE])
+    @Transactional
+    fun procesarVueloTerminado(
+        vueloTerminado: VueloTerminado,
+        channel: Channel,
+        @Header(AmqpHeaders.DELIVERY_TAG) tag: Long
+    ) {
+        println("Vuelo terminado: ${vueloTerminado.vueloId}")
+        try {
+            val facturas = redisFumigacionRepository.obtenerDatosDeVuelo(vueloTerminado.vueloId).map {
+                fumigacionCliente -> Factura(
+                    descripcion = "Servicio de fumigación - vuelo ${vueloTerminado.vueloId}",
+                    total = fumigacionCliente.cantidad * 150.0,
+                    // no hace SELECT, solo crea un proxy (no lo usamos así que no dispara queries a la BD)
+                    cliente = clienteRepository.getReferenceById(fumigacionCliente.clienteId),
+                )
+            }
+            println("Facturación - ${facturas.map { it.total }.joinToString(", ")}")
+            // ver la propiedad batch_size de application.yml para jpa:hibernate
+            // guarda en lotes de x elementos
+            facturaRepository.saveAll(facturas)
 
-        // --- 1. Lógica de Agrupación y Persistencia ---
+            // Eliminamos los datos del buffer de Redis
+            redisFumigacionRepository.borrarDatosDeVuelo(vueloTerminado.vueloId)
 
-        // Buscar el registro de facturación para (vueloId, clienteId)
-        // val factura = facturaRepository.findByVueloIdAndClienteId(tiempo.vueloId, tiempo.clienteId)
-
-        // Si existe: factura.minutosAcumulados += tiempo.duracionSegundos
-        // Si no existe: crear nuevo registro
-
-        // 2. Persistir
-        // facturaRepository.save(factura)
-
-        println("💰 Facturación: Acumulando ${tiempo.duracionSegundos}s para cliente ${tiempo.clienteId} en vuelo ${tiempo.vueloId}")
-
-        // Si la base de datos falla, RabbitMQ reintentará la entrega hasta que tenga éxito,
-        // ¡asegurando que no pierdes un solo segundo de facturación!
+            channel.basicAck(tag, false)
+        } catch (ex: Exception) {
+            // directo a DLQ
+            channel.basicReject(tag, false)
+        }
     }
+
 }

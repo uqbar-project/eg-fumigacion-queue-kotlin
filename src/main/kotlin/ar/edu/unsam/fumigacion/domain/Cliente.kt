@@ -39,14 +39,4 @@ class Cliente(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0
 
-    @OneToMany(
-        cascade = [CascadeType.ALL],
-        fetch = FetchType.LAZY,
-        orphanRemoval = true
-    )
-    var facturas: MutableSet<Factura> = mutableSetOf()
-
-    fun agregarFactura(factura: Factura) {
-        facturas.add(factura)
-    }
 }

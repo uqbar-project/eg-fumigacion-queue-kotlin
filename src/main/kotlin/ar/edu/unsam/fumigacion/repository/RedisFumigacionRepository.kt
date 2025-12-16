@@ -29,4 +29,44 @@ class RedisFumigacionRepository(
 
         return count
     }
+
+    fun obtenerDatosDeVuelo(vueloId: String): List<FumigacionCliente> {
+        val pattern = "fumigacion:vuelo:$vueloId:cliente:*"
+        val keys = stringRedisTemplate.keys(pattern)
+
+        if (keys.isEmpty()) return emptyList()
+
+        val ops = stringRedisTemplate.opsForHash<String, String>()
+
+        return keys.mapNotNull { key ->
+            val data = ops.entries(key)
+            if (data.isEmpty()) return@mapNotNull null
+
+            val clienteId = key.substringAfterLast(":").toLong()
+
+            FumigacionCliente(
+                clienteId = clienteId,
+                cantidad = data["cantidad"]?.toLong() ?: 0L,
+                desde = data["desde"]?.let { Instant.parse(it) },
+                hasta = data["hasta"]?.let { Instant.parse(it) }
+            )
+        }
+    }
+
+    fun borrarDatosDeVuelo(vueloId: String) {
+        val pattern = "fumigacion:vuelo:$vueloId:cliente:*"
+        val keys = stringRedisTemplate.keys(pattern)
+
+        if (keys.isNotEmpty()) {
+            stringRedisTemplate.delete(keys)
+        }
+    }
+
 }
+
+data class FumigacionCliente(
+    val clienteId: Long,
+    val cantidad: Long,
+    val desde: Instant?,
+    val hasta: Instant?
+)
