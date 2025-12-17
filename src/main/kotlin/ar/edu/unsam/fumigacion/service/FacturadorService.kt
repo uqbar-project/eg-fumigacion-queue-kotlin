@@ -5,7 +5,7 @@ import ar.edu.unsam.fumigacion.domain.Factura
 import ar.edu.unsam.fumigacion.dto.VueloTerminado
 import ar.edu.unsam.fumigacion.repository.ClienteRepository
 import ar.edu.unsam.fumigacion.repository.FacturaRepository
-import ar.edu.unsam.fumigacion.repository.RedisFumigacionRepository
+import ar.edu.unsam.fumigacion.repository.FumigacionRepository
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.support.AmqpHeaders
 import org.springframework.messaging.handler.annotation.Header
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class FacturadorService(
-    private val redisFumigacionRepository: RedisFumigacionRepository,
+    private val fumigacionRepository: FumigacionRepository,
     private val clienteRepository: ClienteRepository,
     private val facturaRepository: FacturaRepository,
 ) {
@@ -29,7 +29,7 @@ class FacturadorService(
     ) {
         println("Vuelo terminado: ${vueloTerminado.vueloId}")
         try {
-            val facturas = redisFumigacionRepository.obtenerDatosDeVuelo(vueloTerminado.vueloId).map {
+            val facturas = fumigacionRepository.obtenerDatosDeVuelo(vueloTerminado.vueloId).map {
                 fumigacionCliente -> Factura(
                     descripcion = "Servicio de fumigación - ${vueloTerminado.vueloId}",
                     total = fumigacionCliente.cantidad * 150.0,
@@ -43,7 +43,7 @@ class FacturadorService(
             facturaRepository.saveAll(facturas)
 
             // Eliminamos los datos del buffer de Redis
-            redisFumigacionRepository.borrarDatosDeVuelo(vueloTerminado.vueloId)
+            fumigacionRepository.borrarDatosDeVuelo(vueloTerminado.vueloId)
 
             channel.basicAck(tag, false)
         } catch (ex: Exception) {

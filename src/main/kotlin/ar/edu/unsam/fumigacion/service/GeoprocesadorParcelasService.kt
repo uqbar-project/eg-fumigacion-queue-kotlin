@@ -4,7 +4,7 @@ import ar.edu.unsam.fumigacion.config.POSICION_QUEUE
 import ar.edu.unsam.fumigacion.domain.Cliente
 import ar.edu.unsam.fumigacion.dto.PosicionAvion
 import ar.edu.unsam.fumigacion.repository.ClienteRepository
-import ar.edu.unsam.fumigacion.repository.RedisFumigacionRepository
+import ar.edu.unsam.fumigacion.repository.FumigacionRepository
 import com.rabbitmq.client.Channel
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.support.AmqpHeaders
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GeoprocesadorParcelasService(
-    private val redisFumigacionRepository: RedisFumigacionRepository
+    private val fumigacionRepository: FumigacionRepository
 ) {
 
     @Autowired
@@ -36,7 +36,7 @@ class GeoprocesadorParcelasService(
             )
 
             if (cliente != null) {
-                redisFumigacionRepository.registrarPaso(
+                fumigacionRepository.registrarPaso(
                     posicion.vueloId,
                     cliente.id,
                     posicion.timestamp

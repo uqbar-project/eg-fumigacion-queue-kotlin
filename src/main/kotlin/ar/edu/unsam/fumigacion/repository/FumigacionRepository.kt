@@ -5,7 +5,7 @@ import org.springframework.stereotype.Repository
 import java.time.Instant
 
 @Repository
-class RedisFumigacionRepository(
+class FumigacionRepository(
     private val stringRedisTemplate: StringRedisTemplate
 ) {
 

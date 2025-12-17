@@ -1,7 +1,7 @@
 
 ## Simulador de vuelo
 
-Para disparar el proceso de node hay que posicionarse en la carpeta [simulator](./simulator/).
+Para disparar el proceso de node hay que posicionarse en la carpeta [simulator](../simulator).
 
 Descargá la primera vez las dependencias
 
@@ -33,4 +33,4 @@ El proceso simula un vuelo que pasa por 3 clientes conocidos en nuestra base Pos
 - el id del avión (como dato anecdótico)
 - y el timestamp (el momento, por las dudas para sincronizar)
 
-![recorrido vuelo](../images/vuelo-recorrido.png)
+<img src="../images/vuelo-recorrido.png" height="70%" width="70%" alt="Recorrido vuelo">
