@@ -89,4 +89,4 @@ spring:
 - por último damos el ack de que procesamos el vuelo finalizado correctamente
 - en caso de error, el basicReject se encarga de avisar a la cola de exchange de que debe mandar el mensaje a la DLQ
 
-<img src="../images/final-vuelo.png" alt="Final vuelo" height="70%" width="70%">
+<img src="../images/fin-vuelo-workflow.png" alt="Final vuelo" height="70%" width="70%">
