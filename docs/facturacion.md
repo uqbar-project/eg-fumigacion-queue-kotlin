@@ -90,3 +90,16 @@ spring:
 - en caso de error, el basicReject se encarga de avisar a la cola de exchange de que debe mandar el mensaje a la DLQ
 
 <img src="../images/fin-vuelo-workflow.png" alt="Final vuelo" height="70%" width="70%">
+
+## Facturas generadas
+
+Si ingresamos a `http://localhost:5055/browser` con las credenciales de pgAdmin (podés verlas en el archivo [docker-compose.yml](../docker-compose.yml)) y ejecutamos este query:
+
+```sql
+SELECT * FROM public.facturas
+ORDER BY id ASC
+```
+
+nos queda la lista de facturas asociadas al vuelo:
+
+![facturas generadas](../images/facturas-sql.png)
