@@ -5,11 +5,11 @@ Podríamos implementarlo así
 
 ```kotlin
 @RabbitListener(queues = [POSICION_QUEUE])
-    @Transactional
-    fun procesarPosicion(posicion: PosicionAvion) {
-        // --- 1. Lógica de Geoposicionamiento ---
-        val cliente = identificarClientePorUbicacion(posicion.longitud, posicion.latitud)
-        ...
+@Transactional
+fun procesarPosicion(posicion: PosicionAvion) {
+    // --- 1. Lógica de Geoposicionamiento ---
+    val cliente = identificarClientePorUbicacion(posicion.longitud, posicion.latitud)
+    ...
 ```
 
 pero eso hace que automáticamente al recibir el mensaje lo elimine de la queue, lo que se conoce como **auto ack**.
@@ -150,4 +150,4 @@ Esta información es propia de cada mensaje y cada vez que hay un rechazo Rabbit
 
 Dejamos a continuación un diagrama de flujo del proceso:
 
-![RabbitMQ - Diagrama de flujo](../images/rabbitMQ-diagrama-flujo.png)
+<img src="../images/rabbitMQ-diagrama-flujo.png" alt="RabbitMQ - Diagrama de flujo" height="70%" width="70%">

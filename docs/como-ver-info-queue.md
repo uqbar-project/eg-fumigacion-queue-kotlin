@@ -32,7 +32,7 @@ En la página de detalles de la cola, buscá el panel llamado "Get messages" (Ob
 
 > **IMPORTANTE**: Asegurate de que la opción "Requeue" (Volver a encolar) esté seleccionada a "Yes" (Sí). Esto es crucial: si pedís mensajes de la cola y no los volvés a encolar, el consumidor de Kotlin no los verá.
 
-<img src="../images/rabbitMQ-getMessages.png" height="70%" width="70%" alt="Get messages">
+<img src="../images/rabbitMQ-getMessages.png" height="50%" width="50%" alt="Get messages">
 
 Hacé click en el botón "Get Messages".
 

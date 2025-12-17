@@ -8,6 +8,8 @@ Necesitamos entonces
 - servicios con una alta capacidad, que necesitan no solo durabilidad sino la posibilidad de ser tolerante a fallas (si nuestro servidor del backend esté caído debe procesarlo en otro momento pero de ninguna manera podemos perder el registro sobre los vuelos de los aviones para facturar)
 - servicios que necesitan ser igualmente durables, pero que tienen una baja frecuencia de uso, como la que toma los acumulados para finalmente emitir la factura a cada cliente
 
+<img src="./images/arquitectura-general.png" alt="Arquitectura General" height="70%" width="70%">
+
 ## Iniciando la queue
 
 ```bash
