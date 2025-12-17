@@ -150,4 +150,4 @@ Esta información es propia de cada mensaje y cada vez que hay un rechazo Rabbit
 
 Dejamos a continuación un diagrama de flujo del proceso:
 
-![RabbitMQ - Diagrama de flujo](../images/RabbitMQ-diagrama-flujo.png)
+![RabbitMQ - Diagrama de flujo](../images/rabbitMQ-diagrama-flujo.png)
