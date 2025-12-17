@@ -32,10 +32,10 @@ En la página de detalles de la cola, buscá el panel llamado "Get messages" (Ob
 
 > **IMPORTANTE**: Asegurate de que la opción "Requeue" (Volver a encolar) esté seleccionada a "Yes" (Sí). Esto es crucial: si pedís mensajes de la cola y no los volvés a encolar, el consumidor de Kotlin no los verá.
 
-![get messages](../images/rabbitMQ-getMessages.png)
+<img src="../images/rabbitMQ-getMessages.png" height="70%" width="70%" alt="Get messages">
 
 Hacé click en el botón "Get Messages".
 
-<img src="../images/rabbitMQ-messages.png" height="70%" width="70%">
+<img src="../images/rabbitMQ-messages.png" height="70%" width="70%" alt="Messages">
 
 Verás el mensaje con el payload JSON exacto, incluyendo los campos `vueloId`, `latitud`, `longitud`, y `timestamp`. Esto es perfecto para verificar que el formato de Node.js coincide con lo que espera tu GeoprocesadorService de Kotlin.
