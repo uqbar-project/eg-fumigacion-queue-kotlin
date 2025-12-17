@@ -20,7 +20,7 @@ Si elegimos el id de cliente, y almacenamos la cantidad de minutos...
 | 1          | 38       |
 | 4          | 25       |
 
-... el problema es cómo hacemos para bajar esta información a la base relacional **sin bloquear a Redis**, es decir aceptando nuevos datos a medida que van llegando. Podríamos ir utilizando distintos hashes, pero vamos a elegir otra opción.
+... el problema es cómo hacemos el corte, qué involucran los 38 segundos del primer cliente: es un vuelo, son muchos? Además cuando necesitemos generar la factura, no deberíamos pausar el procesamiento de la queue?
 
 Utilizaremos como clave nuestro id de vuelo y luego el id de cliente y los segundos transcurridos. De yapa también almacenaremos el primer y el último timestamp que recibamos (no nos importa si el avión entra o sale varias veces, la cantidad de segundos es lo importante para facturar).
 
