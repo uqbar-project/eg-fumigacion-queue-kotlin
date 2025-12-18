@@ -40,3 +40,7 @@ Cuando el vuelo se termina,
 - [y otro listener será entonces el encargado de procesar los resultados y generar una factura](./docs/facturacion.md)
 
 De esa manera seguimos el modelo _event-driven_.
+
+## Testeo
+
+Te dejamos [el link a la explicación del testeo que hicimos](./docs/testing.md)
