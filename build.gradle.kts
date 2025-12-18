@@ -4,6 +4,7 @@ plugins {
 	id("org.springframework.boot") version "3.5.8"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
+	jacoco
 }
 
 group = "ar.edu.unsam"
@@ -50,4 +51,21 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+jacoco {
+	toolVersion = "0.8.12"
+}
+
+tasks.jacocoTestReport {
+	dependsOn(tasks.test)
+	reports {
+		xml.required.set(true)
+		html.required.set(true)
+		csv.required.set(false)
+	}
+}
+
+tasks.test {
+	finalizedBy(tasks.jacocoTestReport)
 }
