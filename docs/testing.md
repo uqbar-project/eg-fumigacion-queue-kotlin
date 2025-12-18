@@ -31,7 +31,7 @@ flowchart LR
     end
 
     subgraph MQ["Mensajería (Mock)"]
-        CH[Channel<br/>(RabbitMQ mock)]
+        CH[Channel\n(RabbitMQ mock)]
     end
 
     %% Relaciones principales
