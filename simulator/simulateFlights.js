@@ -41,7 +41,7 @@ function crearAvion(origen, destino, velocidad) {
     ux: dx / distanciaTotal,
     uy: dy / distanciaTotal,
     distanciaRecorrida: 0,
-    distanciaTotal
+    distanciaTotal,
   }
 }
 
@@ -70,7 +70,7 @@ async function simularVuelo() {
     arguments: {
       'x-dead-letter-exchange': QUEUE_POSITION_RETRY_EXCHANGE,
       'x-dead-letter-routing-key': QUEUE_POSITION_RETRY_QUEUE,
-    }
+    },
   })
 
   const avion = crearAvion(ORIGEN, DESTINO, VELOCIDAD)
