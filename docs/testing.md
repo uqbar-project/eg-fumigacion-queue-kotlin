@@ -120,4 +120,4 @@ Otro test interesante es cuando simulamos un error en el repositorio de Fumigaci
 
 ### Otros tests
 
-Para más detalle recomendamos ver la implementación de los tests, tanto del [geoprocesador](../src/test/kotlin/ar/edu/unsam/fumigacion/service/GeoprocesadorParcelasServiceTest.kt) como del [mensajero](../src/test/kotlin/ar/edu/unsam/fumigacion/service/GeoprocesadorParcelasServiceTest.kt) como del [facturador](../src/test/kotlin/ar/edu/unsam/fumigacion/service/FacturadorServiceTest.kt).
+Para más detalle recomendamos ver la implementación de los tests, tanto del [geoprocesador](../src/test/kotlin/ar/edu/unsam/fumigacion/service/GeoprocesadorParcelasServiceTest.kt) como del [facturador](../src/test/kotlin/ar/edu/unsam/fumigacion/service/FacturadorServiceTest.kt).
