@@ -34,6 +34,9 @@ dependencies {
 	implementation("net.postgis:postgis-jdbc:2.5.0")
 
 	testImplementation("org.springframework.amqp:spring-rabbit-test")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
+	testImplementation("org.testcontainers:testcontainers")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
