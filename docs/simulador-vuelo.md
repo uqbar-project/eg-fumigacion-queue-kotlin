@@ -7,13 +7,13 @@ Descargá la primera vez las dependencias
 
 ```bash
 nvm use
-npm install
+pnpm install
 ```
 
 Y luego ejecutá
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 En la consola vas a ver la información al azar que se produce y se envía a la cola que la almacena:
