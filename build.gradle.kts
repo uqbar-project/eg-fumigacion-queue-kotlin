@@ -1,10 +1,10 @@
 plugins {
 	kotlin("jvm") version "2.2.21"
 	kotlin("plugin.spring") version "2.2.21"
-	id("org.springframework.boot") version "3.5.8"
+	id("org.springframework.boot") version "3.5.10"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
-	jacoco
+    jacoco
 }
 
 group = "ar.edu.unsam"
@@ -32,7 +32,7 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 
 	implementation("org.hibernate.orm:hibernate-spatial")
-	implementation("net.postgis:postgis-jdbc:2.5.0")
+	implementation("net.postgis:postgis-jdbc:2025.1.1")
 
 	testImplementation("org.springframework.amqp:spring-rabbit-test")
 	testImplementation("org.testcontainers:junit-jupiter")
@@ -44,9 +44,19 @@ dependencies {
 }
 
 kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
-	}
+    jvmToolchain(21)
+
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-Xjsr305=strict",
+            "-Xannotation-default-target=param-property"
+        )
+    }
+}
+
+tasks.withType<JavaCompile> {
+    targetCompatibility = "21"
+    sourceCompatibility = "21"
 }
 
 tasks.withType<Test> {
