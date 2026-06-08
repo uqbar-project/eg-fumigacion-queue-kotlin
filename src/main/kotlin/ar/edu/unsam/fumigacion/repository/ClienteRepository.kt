@@ -23,13 +23,14 @@ interface ClienteRepository : JpaRepository<Cliente, Long> {
     @Query(nativeQuery = true, value = """
         SELECT * FROM clientes c 
         WHERE 
-            -- 1. ST_MakeEnvelope crea una geometría rectangular a partir de las 4 coordenadas.
+            -- ST_Contains(A, B) evalúa si la geometría A contiene a la geometría B.
+            -- Geometría A: Crea un rectángulo (caja contenedora) usando los límites de la parcela del cliente.
             ST_Contains(
                 ST_MakeEnvelope(
                     c.parcela_x_inicio, c.parcela_y_inicio, 
                     c.parcela_x_fin, c.parcela_y_fin
                 ), 
-                -- 2. ST_MakePoint crea la geometría de un punto (la ubicación actual).
+                -- Geometría B: Crea un punto espacial con las coordenadas que pasamos por parámetro.
                 ST_MakePoint(:x, :y)
             )
         LIMIT 1

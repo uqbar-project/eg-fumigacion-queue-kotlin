@@ -73,9 +73,9 @@ class RabbitMQConfig {
         QueueBuilder.durable(POSICION_RETRY_QUEUE)
             // ⏱ delay de retry
             .withArgument("x-message-ttl", 10_000)
-            // cuando vence → vuelve a la main
-            .withArgument("x-dead-letter-exchange", POSICION_EXCHANGE)
-            .withArgument("x-dead-letter-routing-key", POSICION_QUEUE)
+            // 👇 Cambiar: después del retry, ir a DLQ
+            .withArgument("x-dead-letter-exchange", POSICION_DLQ_EXCHANGE)
+            .withArgument("x-dead-letter-routing-key", POSICION_DLQ)
             .build()
 
     @Bean
