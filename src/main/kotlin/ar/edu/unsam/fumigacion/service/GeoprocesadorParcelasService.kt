@@ -1,5 +1,7 @@
 package ar.edu.unsam.fumigacion.service
 
+import ar.edu.unsam.fumigacion.config.POSICION_DLQ
+import ar.edu.unsam.fumigacion.config.POSICION_DLQ_EXCHANGE
 import ar.edu.unsam.fumigacion.config.POSICION_QUEUE
 import ar.edu.unsam.fumigacion.domain.Cliente
 import ar.edu.unsam.fumigacion.dto.PosicionAvion
@@ -7,6 +9,7 @@ import ar.edu.unsam.fumigacion.repository.ClienteRepository
 import ar.edu.unsam.fumigacion.repository.FumigacionRepository
 import com.rabbitmq.client.Channel
 import org.springframework.amqp.rabbit.annotation.RabbitListener
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.support.AmqpHeaders
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.handler.annotation.Header
@@ -15,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GeoprocesadorParcelasService(
-    private val fumigacionRepository: FumigacionRepository
+    private val fumigacionRepository: FumigacionRepository,
+    private val rabbitTemplate: RabbitTemplate
 ) {
 
     @Autowired
@@ -43,6 +47,8 @@ class GeoprocesadorParcelasService(
                 )
                 println("Confirmamos vuelo a ${cliente.id} - ${cliente.razonSocial}")
             } else {
+                // Simulamos error para que vaya a la DLQ
+                // throw IllegalArgumentException("Invalid client")
                 println("Volando en zona sin clientes")
             }
             channel.basicAck(tag, false)
@@ -55,15 +61,13 @@ class GeoprocesadorParcelasService(
 
             if (retryCount >= 3) {
                 println("☠️ Mensaje enviado a DLQ luego de $retryCount reintentos")
-                channel.basicReject(tag, false)
-                // si no tuviera configurada la dead letter exchange el mensaje se pierde
-                // pero como está configurada va la DLQ (ver RabbitMQConfig)
-                // basicReject con el segundo parámetro en true => vuelve a encolarse (puede
-                // ser consumido por el mismo listener o por otro), ojo => puede llevarte a tener
-                // un timeout
+                // Publicar manualmente a DLQ (porque dead-letter de posicionQueue va a retry exchange)
+                rabbitTemplate.convertAndSend(POSICION_DLQ_EXCHANGE, POSICION_DLQ, posicion)
+                channel.basicAck(tag, false)
             } else {
-                println("🔁 Retry #${retryCount + 1}")
-                channel.basicNack(tag, false, false) // retry
+                println("🔁 Retry #${retryCount + 1} (esperando 10s)")
+                // Nack sin requeue → va a dead-letter-exchange (retry queue con TTL)
+                channel.basicNack(tag, false, false)
             }
         }
     }

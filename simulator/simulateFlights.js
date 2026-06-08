@@ -1,5 +1,7 @@
 import amqp from 'amqplib'
 
+// TODO: Pasarlo a TS
+
 // --------------------
 // Config RabbitMQ
 // --------------------
@@ -89,6 +91,7 @@ async function simularVuelo() {
       latitud: +avion.posicion.y.toFixed(6),
     }
 
+    // TODO: no usar JSON.stringify -> devalue?
     channel.sendToQueue(QUEUE_POSITION, Buffer.from(JSON.stringify(mensaje)), {
       persistent: true, contentType: 'application/json', priority: 1,
     })

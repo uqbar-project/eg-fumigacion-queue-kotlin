@@ -63,7 +63,7 @@ class RabbitMQConfig {
     @Bean
     fun posicionQueue() =
         QueueBuilder.durable(POSICION_QUEUE)
-            // cuando falla → retry exchange
+            // cuando falla → retry exchange (para obtener delay)
             .withArgument("x-dead-letter-exchange", POSICION_RETRY_EXCHANGE)
             .withArgument("x-dead-letter-routing-key", POSICION_RETRY_QUEUE)
             .build()
@@ -71,11 +71,11 @@ class RabbitMQConfig {
     @Bean
     fun posicionRetryQueue() =
         QueueBuilder.durable(POSICION_RETRY_QUEUE)
-            // ⏱ delay de retry
+            // ⏱ delay de retry (10 segundos)
             .withArgument("x-message-ttl", 10_000)
-            // 👇 Cambiar: después del retry, ir a DLQ
-            .withArgument("x-dead-letter-exchange", POSICION_DLQ_EXCHANGE)
-            .withArgument("x-dead-letter-routing-key", POSICION_DLQ)
+            // después del TTL, volver a la cola principal
+            .withArgument("x-dead-letter-exchange", POSICION_EXCHANGE)
+            .withArgument("x-dead-letter-routing-key", POSICION_QUEUE)
             .build()
 
     @Bean
