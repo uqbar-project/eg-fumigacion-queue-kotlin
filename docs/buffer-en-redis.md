@@ -13,7 +13,7 @@ Para actualizar la información de facturación podríamos:
 
 La decisión más importante a tomar es cuál será nuestra clave con la que accederemos y actualizaremos la información.
 
-Si elegimos el id de cliente, y almacenamos la cantidad de minutos...
+Si elegimos el id de cliente, y almacenamos la cantidad de segundos...
 
 | Id cliente | Segundos |
 |------------|----------|
