@@ -1,5 +1,7 @@
 package ar.edu.unsam.fumigacion.service
 
+import ar.edu.unsam.fumigacion.config.POSICION_DLQ
+import ar.edu.unsam.fumigacion.config.POSICION_DLQ_EXCHANGE
 import ar.edu.unsam.fumigacion.config.POSICION_QUEUE
 import ar.edu.unsam.fumigacion.domain.Cliente
 import ar.edu.unsam.fumigacion.domain.Coordenadas
@@ -14,8 +16,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.Mockito.*
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -89,6 +93,9 @@ class GeoprocesadorParcelasServiceTest {
 
     @Autowired
     private lateinit var fumigacionRepository: FumigacionRepository
+
+    @MockBean
+    private lateinit var rabbitTemplate: RabbitTemplate
 
     @MockitoSpyBean
     private lateinit var spyFumigacionRepository: FumigacionRepository
@@ -199,7 +206,7 @@ class GeoprocesadorParcelasServiceTest {
     }
 
     @Test
-    fun `ante una excepcion con 3 reintentos hace reject sin requeue`() {
+    fun `ante una excepcion con 3 reintentos envia a DLQ`() {
         val cliente = Cliente(
             razonSocial = "ACME",
             parcela = Coordenadas(0.0, 0.0, 10.0, 10.0)
@@ -237,6 +244,7 @@ class GeoprocesadorParcelasServiceTest {
 
         geoprocesadorParcelasService.procesarPosicion(posicion, channel, tag, xDeath)
 
-        verify(channel).basicReject(tag, false)
+        verify(rabbitTemplate).convertAndSend(POSICION_DLQ_EXCHANGE, POSICION_DLQ, posicion)
+        verify(channel).basicAck(tag, false)
     }
 }
